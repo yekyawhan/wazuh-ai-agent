@@ -1,0 +1,127 @@
+<ossec_config>
+  <!-- Active Response Configuration for AI Agent -->
+
+  <!-- Linux Active Response Commands -->
+  <command>
+    <name>ai-isolate-linux</name>
+    <executable>ai-isolate.sh</executable>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <command>
+    <name>ai-block-ip-linux</name>
+    <executable>ai-block-ip.sh</executable>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <command>
+    <name>ai-kill-process-linux</name>
+    <executable>ai-kill-process.sh</executable>
+  </command>
+
+  <command>
+    <name>ai-disable-user-linux</name>
+    <executable>ai-disable-user.sh</executable>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <command>
+    <name>ai-collect-forensics-linux</name>
+    <executable>ai-collect-forensics.sh</executable>
+  </command>
+
+  <!-- Windows Active Response Commands -->
+  <command>
+    <name>ai-isolate-windows</name>
+    <executable>ai-isolate.ps1</executable>
+    <timeout_allowed>yes</timeout_allowed>
+    <shell_timeout>10</shell_timeout>
+  </command>
+
+  <command>
+    <name>ai-block-ip-windows</name>
+    <executable>ai-block-ip.ps1</executable>
+    <timeout_allowed>yes</timeout_allowed>
+    <shell_timeout>10</shell_timeout>
+  </command>
+
+  <command>
+    <name>ai-kill-process-windows</name>
+    <executable>ai-kill-process.ps1</executable>
+    <shell_timeout>10</shell_timeout>
+  </command>
+
+  <command>
+    <name>ai-collect-forensics-windows</name>
+    <executable>ai-collect-forensics.ps1</executable>
+    <shell_timeout>30</shell_timeout>
+  </command>
+
+  <!-- Active Response Rules (Examples - adjust rule IDs as needed) -->
+
+  <!-- Example: Isolate Linux host on critical alert (e.g., rule 100001) -->
+  <active-response>
+    <command>ai-isolate-linux</command>
+    <location>local</location>
+    <rules_id>100001</rules_id>
+    <timeout>300</timeout>
+  </active-response>
+
+  <!-- Example: Block IP on multiple failed SSH logins (e.g., rule 5712) -->
+  <active-response>
+    <command>ai-block-ip-linux</command>
+    <location>local</location>
+    <rules_id>5712</rules_id>
+    <timeout>600</timeout>
+  </active-response>
+
+  <!-- Example: Kill malicious process on detection (e.g., rule 100002) -->
+  <active-response>
+    <command>ai-kill-process-linux</command>
+    <location>local</location>
+    <rules_id>100002</rules_id>
+  </active-response>
+
+  <!-- Example: Disable user on suspicious activity (e.g., rule 100003) -->
+  <active-response>
+    <command>ai-disable-user-linux</command>
+    <location>local</location>
+    <rules_id>100003</rules_id>
+    <timeout>1800</timeout>
+  </active-response>
+
+  <!-- Example: Collect forensics on high-severity alert (e.g., rule 100004) -->
+  <active-response>
+    <command>ai-collect-forensics-linux</command>
+    <location>local</location>
+    <rules_id>100004</rules_id>
+  </active-response>
+
+  <!-- Windows Active Responses -->
+  <active-response>
+    <command>ai-isolate-windows</command>
+    <location>local</location>
+    <rules_id>200001</rules_id> <!-- Example Windows rule ID -->
+    <timeout>300</timeout>
+  </active-response>
+
+  <active-response>
+    <command>ai-block-ip-windows</command>
+    <location>local</location>
+    <rules_id>200002</rules_id> <!-- Example Windows rule ID -->
+    <timeout>600</timeout>
+  </active-response>
+
+  <active-response>
+    <command>ai-kill-process-windows</command>
+    <location>local</location>
+    <rules_id>200003</rules_id> <!-- Example Windows rule ID -->
+  </active-response>
+
+  <active-response>
+    <command>ai-collect-forensics-windows</command>
+    <location>local</location>
+    <rules_id>200004</rules_id> <!-- Example Windows rule ID -->
+  </active-response>
+
+</ossec_config>

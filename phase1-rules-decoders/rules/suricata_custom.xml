@@ -1,0 +1,46 @@
+<group name="suricata">
+  <rule id="100001" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="event_type">alert</field>
+    <description>Generic Suricata Alert - $(alert.signature)</description>
+    <group>suricata_alert,</group>
+  </rule>
+
+  <!-- Network Anomaly Detection -->
+  <rule id="100010" level="10">
+    <if_sid>100001</if_sid>
+    <field name="alert.signature" type="pcre2">(?i)(Nmap|Port Scan|Masscan|Reconnaissance)</field>
+    <description>Suricata: Possible Network Scan Detected - $(alert.signature)</description>
+    <mitre><id>T1046</id></mitre>
+    <group>suricata_network_scan,reconnaissance</group>
+  </rule>
+
+  <rule id="100011" level="12">
+    <if_sid>100001</if_sid>
+    <field name="alert.signature" type="pcre2">(?i)(C2|Command and Control|Beacon|Data Exfil|Exfiltration)</field>
+    <description>Suricata: Possible C2 Communication or Data Exfiltration - $(alert.signature)</description>
+    <mitre><id>T1071</id><id>T1041</id></mitre>
+    <group>suricata_c2,data_exfiltration</group>
+  </rule>
+
+  <!-- DNS Tunneling Detection -->
+  <rule id="100020" level="11">
+    <if_sid>100001</if_sid>
+    <field name="alert.signature" type="pcre2">(?i)(DNS Tunnel|DNSTunnel|iodine|dnscat)</field>
+    <description>Suricata: Possible DNS Tunneling Activity - $(alert.signature)</description>
+    <mitre><id>T1071.004</id></mitre>
+    <group>suricata_dns_tunneling,c2</group>
+  </rule>
+
+  <!-- Lateral Movement Detection -->
+  <rule id="100030" level="10">
+    <if_sid>100001</if_sid>
+    <field name="alert.signature" type="pcre2">(?i)(SMB Brute|RDP Brute|PsExec|WMI Lateral|Pass-the-Hash)</field>
+    <description>Suricata: Possible Lateral Movement Activity - $(alert.signature)</description>
+    <mitre><id>T1021</id><id>T1078</id></mitre>
+    <group>suricata_lateral_movement,privilege_escalation</group>
+  </rule>
+
+  <!-- Rules for parsing Suricata eve.json properly (generic alert rule handles this) -->
+
+</group>

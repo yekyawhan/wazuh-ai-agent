@@ -1,0 +1,6 @@
+<integration>
+  <name>custom-n8n</name>
+  <hook_url>https://n8n.y3kh.dpdns.org/webhook/wazuh-alerts</hook_url>
+  <level>7</level>
+  <alert_format>json</alert_format>
+</integration>

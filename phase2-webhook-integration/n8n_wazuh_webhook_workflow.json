@@ -1,0 +1,152 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wazuh-alerts",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Wazuh Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "id": "webhook1",
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "\nconst alert = $json.body;\n\nlet severity = \"unknown\";\nconst ruleLevel = alert.rule ? alert.rule.level : 0;\n\nif (ruleLevel >= 10) {\n  severity = \"critical\";\n} else if (ruleLevel >= 7) {\n  severity = \"high\";\n} else if (ruleLevel >= 5) {\n  severity = \"medium\";\n} else if (ruleLevel >= 3) {\n  severity = \"low\";\n}\n\nreturn [{\n  json: {\n    alertId: alert.id,\n    timestamp: alert.timestamp,\n    ruleId: alert.rule ? alert.rule.id : null,\n    ruleDescription: alert.rule ? alert.rule.description : null,\n    ruleLevel: ruleLevel,\n    agentName: alert.agent ? alert.agent.name : null,\n    agentId: alert.agent ? alert.agent.id : null,\n    srcIp: alert.data ? alert.data.srcip : null,\n    dstIp: alert.data ? alert.data.dstip : null,\n    protocol: alert.data ? alert.data.protocol : null,\n    fullAlert: alert,\n    severity: severity\n  }\n}];\n"
+      },
+      "name": "Parse Alert & Determine Severity",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "id": "parseAlert",
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "value1": "{{$json.severity}}",
+            "value2": "critical",
+            "operator": "in"
+          },
+          {
+            "value1": "{{$json.severity}}",
+            "value2": "high",
+            "operator": "in"
+          }
+        ]
+      },
+      "name": "Route by Severity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "id": "routeSeverity",
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "1721493612",
+        "text": "🚨 *Wazuh Alert - {{ $json.severity.toUpperCase() }}* 🚨\n\n*Rule:* {{ $json.ruleDescription }} (ID: {{ $json.ruleId }})\n*Level:* {{ $json.ruleLevel }}\n*Agent:* {{ $json.agentName }} (ID: {{ $json.agentId }})\n*Source IP:* {{ $json.srcIp || 'N/A' }}\n*Timestamp:* {{ $json.timestamp }}\n\nFull Alert: {{ $json.fullAlert }}",
+        "options": {
+          "parseMode": "Markdown"
+        }
+      },
+      "name": "Telegram Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "id": "telegramNotification",
+      "position": [960, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "resolve": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "\nconst alert = $json;\n\n// Placeholder for VirusTotal IP/hash lookup\n// In a real scenario, you would call an external API or a custom script\n// using n8n HTTP Request node or execute command node.\n\n// Example of adding a placeholder enrichment\nalert.enrichment = alert.enrichment || {};\nalert.enrichment.virustotal_placeholder = \"VirusTotal lookup not implemented in n8n workflow directly. Use external script.\";\n\nreturn [{ json: alert }];\n"
+      },
+      "name": "VirusTotal Enrichment (Placeholder)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "id": "virustotalPlaceholder",
+      "position": [960, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "\nconst alert = $json;\n\n// Placeholder for Qdrant storage\n// In a real scenario, you would use an HTTP Request node to interact with Qdrant API\n// or an execute command node to run the qdrant_setup.py script.\n\n// Example of adding a placeholder for Qdrant\nalert.qdrant_status = \"Alert not stored in Qdrant directly from n8n workflow. Use external script.\";\n\n// For AI training, all alerts are logged/stored here.\nconsole.log(\"Logging alert for AI training:\", JSON.stringify(alert));\n\nreturn [{ json: alert }];\n"
+      },
+      "name": "Store in Qdrant (Placeholder) & Log for AI",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "id": "qdrantPlaceholder",
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Wazuh Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Alert & Determine Severity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Alert & Determine Severity": {
+      "main": [
+        [
+          {
+            "node": "Route by Severity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Severity": {
+      "main": [
+        [
+          {
+            "node": "Telegram Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "VirusTotal Enrichment (Placeholder)",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Telegram Notification": {
+      "main": [
+        [
+          {
+            "node": "Store in Qdrant (Placeholder) & Log for AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal Enrichment (Placeholder)": {
+      "main": [
+        [
+          {
+            "node": "Store in Qdrant (Placeholder) & Log for AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

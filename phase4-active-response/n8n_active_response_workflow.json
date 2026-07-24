@@ -1,0 +1,338 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/wazuh-ar-decision",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Receive AI Decision",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "id": "n1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.decision_type}}",
+              "operation": "equal",
+              "value2": "AUTO"
+            }
+          ]
+        }
+      },
+      "name": "If AUTO or RECOMMEND",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "id": "n2",
+      "executeOnSuccess": true,
+      "connections": {
+        "main": [
+          [
+            "n3"
+          ],
+          [
+            "n6"
+          ]
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://your-wazuh-api-url/active-response",
+        "method": "POST",
+        "body": "={{JSON.stringify($json.wazuh_ar_payload)}}",
+        "jsonParameters": true,
+        "options": {},
+        "authentication": "predefined",
+        "predefinedAuth": {
+          "authMethod": "headerAuth",
+          "headerAuth": {
+            "name": "Authorization",
+            "value": "Bearer {{ $credentials.wazuhApiToken }}"
+          }
+        }
+      },
+      "name": "Trigger Wazuh AR (AUTO)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "id": "n3",
+      "credentials": {
+        "httpHeaderAuth": [
+          "wazuhApiCredentials"
+        ]
+      },
+      "connections": {
+        "main": [
+          [
+            "n4"
+          ]
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://your-qdrant-url/collections/wazuh_ar_logs/points",
+        "method": "POST",
+        "body": "={\"points\": [{\"id\": \"{{$json.alert_id}}\", \"payload\": {\"timestamp\": \"{{$json.timestamp}}\", \"action\": \"{{$json.action}}\", \"decision_type\": \"AUTO\", \"status\": \"Success\", \"wazuh_response\": \"{{JSON.stringify($json)}}\"}}]}",
+        "jsonParameters": true,
+        "options": {},
+        "authentication": "predefined",
+        "predefinedAuth": {
+          "authMethod": "headerAuth",
+          "headerAuth": {
+            "name": "api-key",
+            "value": "{{ $credentials.qdrantApiKey }}"
+          }
+        }
+      },
+      "name": "Log to Qdrant (AUTO)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "id": "n4",
+      "credentials": {
+        "httpHeaderAuth": [
+          "qdrantCredentials"
+        ]
+      },
+      "connections": {
+        "main": [
+          [
+            "n5"
+          ]
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1721493612",
+        "text": "Wazuh Active Response (AUTO) triggered successfully for alert ID: {{$json.alert_id}} (Action: {{$json.action}}).",
+        "options": {}
+      },
+      "name": "Telegram Confirmation (AUTO)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "id": "n5",
+      "credentials": {
+        "telegramApi": [
+          "telegramBotApi"
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1721493612",
+        "text": "Wazuh AI Agent recommends active response for alert ID: {{$json.alert_id}} (Action: {{$json.action}}). Approve or Deny? [Approve: {{ $workflow.webhookUrls.n7 }}/approve?alert_id={{$json.alert_id}}&action={{$json.action}}&token=YOUR_SECRET_TOKEN] [Deny: {{ $workflow.webhookUrls.n7 }}/deny?alert_id={{$json.alert_id}}&action={{$json.action}}&token=YOUR_SECRET_TOKEN]",
+        "options": {}
+      },
+      "name": "Telegram Approval Request",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "id": "n6",
+      "credentials": {
+        "telegramApi": [
+          "telegramBotApi"
+        ]
+      },
+      "connections": {
+        "main": [
+          [
+            "n7"
+          ]
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "/wazuh-ar-approval",
+        "responseMode": "lastNode",
+        "options": {},
+        "timeout": 3600
+      },
+      "name": "Wait for Approval",
+      "type": "n8n-nodes-base.webhookWait",
+      "typeVersion": 1,
+      "id": "n7",
+      "connections": {
+        "main": [
+          [
+            "n8"
+          ]
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.query.status}}",
+              "operation": "equal",
+              "value2": "approve"
+            }
+          ]
+        }
+      },
+      "name": "If Approved",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "id": "n8",
+      "executeOnSuccess": true,
+      "connections": {
+        "main": [
+          [
+            "n9"
+          ],
+          [
+            "n12"
+          ]
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://your-wazuh-api-url/active-response",
+        "method": "POST",
+        "body": "={{JSON.stringify($json.wazuh_ar_payload)}}",
+        "jsonParameters": true,
+        "options": {},
+        "authentication": "predefined",
+        "predefinedAuth": {
+          "authMethod": "headerAuth",
+          "headerAuth": {
+            "name": "Authorization",
+            "value": "Bearer {{ $credentials.wazuhApiToken }}"
+          }
+        }
+      },
+      "name": "Trigger Wazuh AR (Approved)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "id": "n9",
+      "credentials": {
+        "httpHeaderAuth": [
+          "wazuhApiCredentials"
+        ]
+      },
+      "connections": {
+        "main": [
+          [
+            "n10"
+          ]
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://your-qdrant-url/collections/wazuh_ar_logs/points",
+        "method": "POST",
+        "body": "={\"points\": [{\"id\": \"{{$json.alert_id}}\", \"payload\": {\"timestamp\": \"{{$json.timestamp}}\", \"action\": \"{{$json.action}}\", \"decision_type\": \"RECOMMEND\", \"status\": \"Approved\", \"wazuh_response\": \"{{JSON.stringify($json)}}\"}}]}",
+        "jsonParameters": true,
+        "options": {},
+        "authentication": "predefined",
+        "predefinedAuth": {
+          "authMethod": "headerAuth",
+          "headerAuth": {
+            "name": "api-key",
+            "value": "{{ $credentials.qdrantApiKey }}"
+          }
+        }
+      },
+      "name": "Log to Qdrant (Approved)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "id": "n10",
+      "credentials": {
+        "httpHeaderAuth": [
+          "qdrantCredentials"
+        ]
+      },
+      "connections": {
+        "main": [
+          [
+            "n11"
+          ]
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1721493612",
+        "text": "Wazuh Active Response (RECOMMEND) approved and triggered successfully for alert ID: {{$json.alert_id}} (Action: {{$json.action}}).",
+        "options": {}
+      },
+      "name": "Telegram Confirmation (Approved)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "id": "n11",
+      "credentials": {
+        "telegramApi": [
+          "telegramBotApi"
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://your-qdrant-url/collections/wazuh_ar_logs/points",
+        "method": "POST",
+        "body": "={\"points\": [{\"id\": \"{{$json.alert_id}}\", \"payload\": {\"timestamp\": \"{{$json.timestamp}}\", \"action\": \"{{$json.action}}\", \"decision_type\": \"RECOMMEND\", \"status\": \"Denied\"}}]}",
+        "jsonParameters": true,
+        "options": {},
+        "authentication": "predefined",
+        "predefinedAuth": {
+          "authMethod": "headerAuth",
+          "headerAuth": {
+            "name": "api-key",
+            "value": "{{ $credentials.qdrantApiKey }}"
+          }
+        }
+      },
+      "name": "Log to Qdrant (Denied)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "id": "n12",
+      "credentials": {
+        "httpHeaderAuth": [
+          "qdrantCredentials"
+        ]
+      },
+      "connections": {
+        "main": [
+          [
+            "n13"
+          ]
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1721493612",
+        "text": "Wazuh Active Response (RECOMMEND) for alert ID: {{$json.alert_id}} (Action: {{$json.action}}) was denied.",
+        "options": {}
+      },
+      "name": "Telegram Notification (Denied)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "id": "n13",
+      "credentials": {
+        "telegramApi": [
+          "telegramBotApi"
+        ]
+      }
+    }
+  ],
+  "connections": {},
+  "active": false,
+  "settings": {},
+  "id": "wazuh-active-response-workflow",
+  "name": "Wazuh AI Active Response Automation",
+  "createdAt": "2023-10-27T10:00:00.000Z",
+  "updatedAt": "2023-10-27T10:00:00.000Z",
+  "versionId": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+  "triggerCount": 0,
+  "tags": []
+}
