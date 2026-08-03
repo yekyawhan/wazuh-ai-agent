@@ -1,0 +1,25 @@
+name: SSH Brute Force Response
+
+severity: high
+
+mitre:
+  technique:
+    - T1110
+
+trigger:
+  event:
+    - failed_login
+
+investigation:
+  steps:
+    - Check source IP reputation
+    - Review authentication logs
+    - Verify user activity
+
+response:
+  actions:
+    - Block malicious IP
+    - Create incident case
+
+approval:
+  required: true
