@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  wazuh-ai-agent:
+    image: wazuh-ai-agent:latest
+    environment:
+      TZ: Asia/Yangon
+    networks:
+      - frontend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+networks:
+  frontend:
+    external: true
