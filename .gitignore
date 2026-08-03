@@ -1,0 +1,20 @@
+# Secrets
+.env
+*.env
+*.key
+*.pem
+secrets/
+credentials/
+
+# Runtime data
+data/
+logs/
+backup/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editors
+.vscode/
+.idea/
