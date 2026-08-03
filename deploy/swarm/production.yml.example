@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+
+  ai-soc-agent:
+    image: wazuh-ai-agent:latest
+    networks:
+      - frontend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+networks:
+  frontend:
+    external: true
